@@ -17,7 +17,7 @@ FILM_CACHE_FILE  = os.path.join(CACHE_DIR, "films_with_genre.json")
 
 def fetch_json(url):
     try:
-        r = req_lib.get(url, timeout=10)
+        r = req_lib.get(url, timeout=30)
         r.raise_for_status()
         return r.json()
     except Exception:
