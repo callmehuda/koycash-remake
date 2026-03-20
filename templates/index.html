@@ -84,21 +84,12 @@
 
 {% block scripts %}
 <script>
-    function thumb(t) {
-      if (!t) return '';
-      if (t.startsWith('http')) {
-        // Full URL, ambil bagian setelah /assets/
-        if (t.includes('koyzone.xyz/assets/')) {
-          return '/proxy-img/' + t.split('koyzone.xyz/assets/')[1];
-        }
-        return t; // URL luar, biarkan langsung
-      }
-      if (t.startsWith('assets/')) {
-        return '/proxy-img/' + t.slice('assets/'.length); // "assets/img/abc.jpg" → "/proxy-img/img/abc.jpg"
-      }
-      return '/proxy-img/img/' + t; // "abc.jpg" → "/proxy-img/img/abc.jpg"
-    }
-
+  function thumb(t) {
+    if (!t) return '';
+    if (t.startsWith('http')) return t;
+    if (t.startsWith('assets/')) return 'https://koyzone.xyz/' + t;
+    return 'https://koyzone.xyz/assets/img/' + t;
+  }
 
   function gameCard(f) {
     const title = f.judul || f.title || '';
@@ -114,6 +105,7 @@
 
   let allGames = [];
 
+  // Load Top
   fetch('/api/top').then(r => r.json()).then(data => {
     const el = document.getElementById('top-container');
     if (!data.length) { el.innerHTML = '<p style="font-size:13px;padding:10px;">Tidak ada data.</p>'; return; }
@@ -126,6 +118,7 @@
   }).catch(() => {});
 
 
+  // Load all games
   fetch('/api/list').then(r => r.json()).then(data => {
     allGames = data;
     renderGames(data);

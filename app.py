@@ -2,7 +2,7 @@ import json
 import os
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from flask import Flask, render_template, request, jsonify, Response, stream_with_context
+from flask import Flask, render_template, request, jsonify
 import requests as req_lib
 
 app = Flask(__name__)
@@ -206,33 +206,6 @@ def api_rebuild():
         t = threading.Thread(target=lambda: build_genre_cache(force=True), daemon=True)
         t.start()
     return jsonify({"started": True})
-    
-@app.route("/proxy-img/<path:img_path>")
-def proxy_img(img_path):
-    url = f"{BASE_API}/assets/{img_path}"
-    try:
-        r = req_lib.get(url, headers=HEADERS, timeout=10, stream=True)
-        r.raise_for_status()
-
-        content_type = r.headers.get("Content-Type", "image/jpeg")
-
-        def generate():
-            for chunk in r.iter_content(chunk_size=8192):
-                if chunk:
-                    yield chunk
-
-        response = Response(
-            stream_with_context(generate()),
-            status=r.status_code,
-            content_type=content_type,
-        )
-        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
-        return response
-
-    except req_lib.exceptions.HTTPError as e:
-        return jsonify({"error": str(e)}), r.status_code
-    except Exception as e:
-        return jsonify({"error": str(e)}), 502    
 
 
 if __name__ == "__main__":
