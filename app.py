@@ -15,9 +15,16 @@ FILM_CACHE_FILE  = os.path.join(CACHE_DIR, "films_with_genre.json")
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Referer": "https://koyzone.xyz/",
+}
+
 def fetch_json(url):
     try:
-        r = req_lib.get(url, timeout=30)
+        r = req_lib.get(url, timeout=10, headers=HEADERS)
         r.raise_for_status()
         return r.json()
     except Exception:
