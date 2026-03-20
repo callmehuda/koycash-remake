@@ -63,7 +63,6 @@
       <div class="skeleton" style="flex:0 0 100px;height:210px;"></div>
     </div>
   </div>
-  </div>
 
   <!-- ALL GAMES -->
   <div class="section">
@@ -106,7 +105,6 @@
 
   let allGames = [];
 
-  // Load Top
   fetch('/api/top').then(r => r.json()).then(data => {
     const el = document.getElementById('top-container');
     if (!data.length) { el.innerHTML = '<p style="font-size:13px;padding:10px;">Tidak ada data.</p>'; return; }
@@ -119,7 +117,6 @@
   }).catch(() => {});
 
 
-  // Load all games
   fetch('/api/list').then(r => r.json()).then(data => {
     allGames = data;
     renderGames(data);
