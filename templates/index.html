@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}KoyCash — Game Android{% endblock %}
+
+{% block head %}
+<style>
+  .hero {
+    background: var(--black);
+    color: var(--yellow);
+    padding: 20px 16px 16px;
+    border-bottom: var(--border);
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 36px;
+    text-transform: uppercase;
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+  .hero p { font-size: 12px; margin-top: 6px; color: #aaa; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+  .section { margin-bottom: 28px; }
+  .top-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
+  .top-scroll::-webkit-scrollbar { display: none; }
+  .top-card {
+    flex: 0 0 100px;
+    border: var(--border);
+    box-shadow: var(--shadow-sm);
+    background: var(--white);
+    text-decoration: none;
+    color: var(--black);
+    transition: transform .1s, box-shadow .1s;
+    display: block;
+    position: relative;
+  }
+  .top-card:hover { transform: translate(-3px,-3px); box-shadow: 8px 8px 0 var(--black); }
+  .top-card img { width: 100%; height: 178px; object-fit: cover; border-bottom: 2px solid var(--black); display: block; }
+  .top-card-rank {
+    position: absolute; top: 0; left: 0;
+    background: var(--red); color: var(--white);
+    font-family: 'Archivo Black', sans-serif; font-size: 13px;
+    width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+    border-right: 2px solid var(--black); border-bottom: 2px solid var(--black);
+  }
+  .top-card p { font-size: 10px; font-weight: 700; padding: 5px 6px; line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <h1>Game<br>Android</h1>
+  <p>Kumpulan game android terlengkap</p>
+</div>
+
+<div class="container">
+  <!-- TOP -->
+  <div class="section">
+    <div class="section-header"><h2>Top Games <span>🔥</span></h2></div>
+    <div class="top-scroll" id="top-container">
+      <div class="skeleton" style="flex:0 0 100px;height:210px;"></div>
+      <div class="skeleton" style="flex:0 0 100px;height:210px;"></div>
+      <div class="skeleton" style="flex:0 0 100px;height:210px;"></div>
+      <div class="skeleton" style="flex:0 0 100px;height:210px;"></div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ALL GAMES -->
+  <div class="section">
+    <div class="section-header">
+      <h2 id="games-title">Semua Game</h2>
+      <span id="games-count" style="font-size:12px;font-weight:700;color:#777;"></span>
+    </div>
+    <div class="game-grid" id="games-container">
+      <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function thumb(t) {
+    if (!t) return '';
+    if (t.startsWith('http')) return t;
+    if (t.startsWith('assets/')) return 'https://koyzone.xyz/' + t;
+    return 'https://koyzone.xyz/assets/img/' + t;
+  }
+
+  function gameCard(f) {
+    const title = f.judul || f.title || '';
+    const genre = f.genre ? f.genre.split(',')[0].trim() : '';
+    return `<a class="game-card" href="/game/${f.id}">
+      <img src="${thumb(f.thumbnail)}" alt="${title}" onerror="imgFallback(this)" loading="lazy">
+      <div class="game-card-info">
+        <p>${title}</p>
+        ${genre ? `<span class="card-badge">${genre}</span>` : ''}
+      </div>
+    </a>`;
+  }
+
+  let allGames = [];
+
+  // Load Top
+  fetch('/api/top').then(r => r.json()).then(data => {
+    const el = document.getElementById('top-container');
+    if (!data.length) { el.innerHTML = '<p style="font-size:13px;padding:10px;">Tidak ada data.</p>'; return; }
+    el.innerHTML = data.slice(0, 10).map((f, i) => `
+      <a class="top-card" href="/game/${f.id}">
+        <span class="top-card-rank">${i+1}</span>
+        <img src="${thumb(f.thumbnail)}" alt="${f.judul||f.title||''}" onerror="imgFallback(this)" loading="lazy">
+        <p>${f.judul || f.title || ''}</p>
+      </a>`).join('');
+  }).catch(() => {});
+
+
+  // Load all games
+  fetch('/api/list').then(r => r.json()).then(data => {
+    allGames = data;
+    renderGames(data);
+  }).catch(() => {
+    document.getElementById('games-container').innerHTML =
+      '<div class="empty" style="grid-column:span 3"><h3>Error</h3><p>Gagal memuat daftar game.</p></div>';
+  });
+
+
+  function renderGames(data) {
+    const el = document.getElementById('games-container');
+    document.getElementById('games-count').textContent = `${data.length} game`;
+    if (!data.length) {
+      el.innerHTML = '<div class="empty" style="grid-column:span 3"><h3>Kosong</h3><p>Tidak ada game ditemukan.</p></div>';
+      return;
+    }
+    el.innerHTML = data.map(gameCard).join('');
+  }
+</script>
+{% endblock %}

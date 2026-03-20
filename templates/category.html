@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Kategori — KoyCash{% endblock %}
+
+{% block head %}
+<style>
+  .cat-hero { background: var(--black); padding: 20px 16px; border-bottom: var(--border); margin-bottom: 20px; }
+  .cat-hero h1 { font-family: 'Archivo Black', sans-serif; font-size: 28px; text-transform: uppercase; letter-spacing: -1.5px; color: var(--yellow); line-height: 1; }
+  .cat-hero p { font-size: 12px; color: #aaa; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+  .cat-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 0 16px; border-bottom: var(--border); margin-bottom: 16px; }
+  .game-count { font-size: 13px; font-weight: 700; text-transform: uppercase; color: #555; margin-bottom: 12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cat-hero">
+  <h1 id="cat-title">{{ cat_name }}</h1>
+  <p id="cat-subtitle">Game kategori {{ cat_name }}</p>
+</div>
+<div class="container">
+  <div class="cat-chips" id="cat-chips"></div>
+  <div class="game-count" id="game-count"></div>
+  <div class="game-grid" id="games-container">
+    <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+    <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+    <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+    <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+    <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+    <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const catId = {{ cat_id }};
+  const API = 'https://koyzone.xyz';
+
+  function thumbUrl(t) { return t && t.startsWith('http') ? t : `${API}/${t}`; }
+
+  function gameCard(f) {
+    return `<a class="game-card" href="/game/${f.id}">
+      <img src="${thumbUrl(f.thumbnail)}" alt="${f.judul || f.title}" onerror="imgFallback(this)" loading="lazy">
+      <div class="game-card-info">
+        <p>${f.judul || f.title}</p>
+        ${f.genre ? `<span class="card-badge">${f.genre.split(',')[0].trim()}</span>` : ''}
+      </div>
+    </a>`;
+  }
+
+  fetch('/api/categories')
+    .then(r => r.json())
+    .then(data => {
+      const list = data.categories || data;
+      if (!list || !list.length) return;
+      document.getElementById('cat-chips').innerHTML = list.map(c => {
+        const id = c.id || c.category_id;
+        const name = c.name || c.bahasa || c.category || c.label || id;
+        if (parseInt(id) === catId) {
+          document.getElementById('cat-title').textContent = name;
+          document.getElementById('cat-subtitle').textContent = `Game kategori ${name}`;
+        }
+        return `<a class="tag ${parseInt(id)===catId?'active':''}" href="/category/${id}">${name}</a>`;
+      }).join('');
+    });
+
+  fetch(`/api/category/${catId}`)
+    .then(r => r.json())
+    .then(data => {
+      const list = data.films || data.games || data;
+      const el = document.getElementById('games-container');
+      if (!list || !list.length) { el.innerHTML = '<div class="empty" style="grid-column:span 3"><h3>Kosong</h3></div>'; return; }
+      document.getElementById('game-count').textContent = `${list.length} game ditemukan`;
+      el.innerHTML = list.map(gameCard).join('');
+    })
+    .catch(e => {
+      document.getElementById('games-container').innerHTML =
+        `<div class="empty" style="grid-column:span 3"><h3>Error</h3><p>${e.message}</p></div>`;
+    });
+</script>
+{% endblock %}

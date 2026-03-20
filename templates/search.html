@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Cari Game — KoyCash{% endblock %}
+
+{% block head %}
+<style>
+  .search-hero { background: var(--black); color: var(--yellow); padding: 20px 16px; border-bottom: var(--border); margin-bottom: 20px; }
+  .search-hero h1 { font-family: 'Archivo Black', sans-serif; font-size: 28px; text-transform: uppercase; letter-spacing: -1.5px; }
+  .big-search { display: flex; margin-top: 14px; }
+  .big-search input { flex: 1; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; border: var(--border); border-right: none; padding: 12px 14px; background: var(--white); color: var(--black); outline: none; }
+  .big-search button { font-family: 'Archivo Black', sans-serif; font-size: 14px; border: var(--border); background: var(--yellow); color: var(--black); padding: 12px 18px; cursor: pointer; text-transform: uppercase; transition: transform .1s, box-shadow .1s; box-shadow: var(--shadow); }
+  .big-search button:hover { transform: translate(-2px,-2px); box-shadow: 7px 7px 0 var(--black); }
+  .result-count { font-size: 13px; font-weight: 700; color: #555; margin-bottom: 12px; text-transform: uppercase; }
+  .result-count strong { color: var(--black); }
+  .result-list { display: flex; flex-direction: column; gap: 10px; }
+  .result-item { display: flex; gap: 12px; border: var(--border); box-shadow: var(--shadow-sm); text-decoration: none; color: var(--black); background: var(--white); transition: transform .1s, box-shadow .1s; padding: 10px; align-items: center; }
+  .result-item:hover { transform: translate(-3px,-3px); box-shadow: 8px 8px 0 var(--black); }
+  .result-item img { width: 60px; height: 107px; object-fit: cover; border: 2px solid var(--black); flex-shrink: 0; }
+  .result-title { font-family: 'Archivo Black', sans-serif; font-size: 15px; text-transform: uppercase; letter-spacing: -.5px; margin-bottom: 4px; }
+  .result-genre { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; }
+  .result-arrow { font-family: 'Archivo Black', sans-serif; font-size: 18px; }
+  .recom-label { font-family: 'Archivo Black', sans-serif; font-size: 16px; text-transform: uppercase; border-bottom: var(--border); padding-bottom: 8px; margin-bottom: 12px; margin-top: 20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-hero">
+  <h1>Cari<br>Game</h1>
+  <form class="big-search" onsubmit="doSearch(event)">
+    <input type="text" id="q" placeholder="Nama game..." value="{{ query }}" autocomplete="off">
+    <button type="submit">Cari →</button>
+  </form>
+</div>
+<div class="container">
+  <div id="result-area"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function thumb(t) { return t && t.startsWith('http') ? t : 'https://koyzone.xyz/' + t; }
+  function thumbSearch(t) {
+    if (!t) return '';
+    if (t.startsWith('http')) return t;
+    if (t.startsWith('assets/')) return 'https://koyzone.xyz/' + t;
+    return 'https://koyzone.xyz/assets/img/' + t;
+  }
+  const API = 'https://koyzone.xyz';
+  const initQuery = "{{ query | e }}";
+
+  function thumbUrl(t) { return t && t.startsWith('http') ? t : `${API}/${t}`; }
+
+  function resultItem(f) {
+    return `<a class="result-item" href="/game/${f.id}">
+      <img src="${thumbSearch(f.thumbnail_search || f.thumbnail)}" onerror="imgFallback(this)" loading="lazy">
+      <div style="flex:1">
+        <div class="result-title">${f.judul || f.title}</div>
+        <div class="result-genre">${f.genre || ''}</div>
+      </div>
+      <span class="result-arrow">›</span>
+    </a>`;
+  }
+
+  function doSearch(e) {
+    if (e) e.preventDefault();
+    const q = document.getElementById('q').value.trim();
+    if (!q) return;
+    history.pushState({}, '', `/search?q=${encodeURIComponent(q)}`);
+    runSearch(q);
+  }
+
+  function runSearch(q) {
+    const el = document.getElementById('result-area');
+    el.innerHTML = `<div class="result-count">Mencari "<strong>${q}</strong>"...</div>`;
+    fetch(`/api/search?q=${encodeURIComponent(q)}`)
+      .then(r => r.json())
+      .then(data => {
+        const list = data.films || data.games || data;
+        if (!list || !list.length) {
+          el.innerHTML = `<div class="result-count">0 hasil untuk "<strong>${q}</strong>"</div><div class="empty"><h3>Kosong</h3><p>Coba kata kunci lain.</p></div>`;
+          return;
+        }
+        el.innerHTML = `<div class="result-count">${list.length} hasil untuk "<strong>${q}</strong>"</div>
+          <div class="result-list">${list.map(resultItem).join('')}</div>`;
+      })
+      .catch(e => { el.innerHTML = `<div class="empty"><h3>Error</h3><p>${e.message}</p></div>`; });
+  }
+
+  function loadRecom() {
+    fetch('/api/recommendations')
+      .then(r => r.json())
+      .then(data => {
+        const list = data.films || data.games || data;
+        if (!list || !list.length) return;
+        document.getElementById('result-area').innerHTML =
+          `<p class="recom-label" style="margin-top:0">Rekomendasi</p>
+           <div class="result-list">${list.slice(0,10).map(resultItem).join('')}</div>`;
+      })
+      .catch(() => {});
+  }
+
+  if (initQuery) runSearch(initQuery);
+  else loadRecom();
+</script>
+{% endblock %}

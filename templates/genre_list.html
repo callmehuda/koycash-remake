@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Genre — KoyCash{% endblock %}
+
+{% block head %}
+<style>
+  .hero { background: var(--black); color: var(--yellow); padding: 20px 16px 16px; border-bottom: var(--border); margin-bottom: 20px; }
+  .hero h1 { font-family: 'Archivo Black', sans-serif; font-size: 36px; text-transform: uppercase; letter-spacing: -2px; line-height: 1; }
+  .hero p { font-size: 12px; margin-top: 6px; color: #aaa; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+
+  .genre-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+  .genre-btn {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; border: var(--border); box-shadow: var(--shadow-sm);
+    background: var(--white); text-decoration: none; color: var(--black);
+    font-family: 'Archivo Black', sans-serif; font-size: 13px;
+    text-transform: uppercase; letter-spacing: .3px;
+    transition: transform .1s, box-shadow .1s, background .1s;
+  }
+  .genre-btn:hover { transform: translate(-3px,-3px); box-shadow: 8px 8px 0 var(--black); background: var(--yellow); }
+  .genre-btn .arrow { font-size: 16px; }
+
+  /* Loading state */
+  .loading-box {
+    border: var(--border); box-shadow: var(--shadow);
+    padding: 24px; text-align: center; grid-column: span 2;
+  }
+  .loading-box h3 { font-family: 'Archivo Black', sans-serif; font-size: 16px; text-transform: uppercase; margin-bottom: 10px; }
+  .progress-bar-wrap { border: 2px solid var(--black); height: 18px; background: #eee; margin: 10px 0; }
+  .progress-bar-fill { height: 100%; background: var(--yellow); border-right: 2px solid var(--black); transition: width .4s; }
+  .loading-note { font-size: 11px; color: #777; font-weight: 600; margin-top: 6px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <h1>Genre<br>Game</h1>
+  <p>Pilih genre favoritmu</p>
+</div>
+
+<div class="container">
+  <div class="genre-grid" id="genre-grid">
+    <div class="skeleton" style="height:52px;"></div>
+    <div class="skeleton" style="height:52px;"></div>
+    <div class="skeleton" style="height:52px;"></div>
+    <div class="skeleton" style="height:52px;"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let pollTimer = null;
+
+  function renderGenres(genres) {
+    const el = document.getElementById('genre-grid');
+    if (!genres.length) {
+      el.innerHTML = '<div class="empty" style="grid-column:span 2"><h3>Kosong</h3><p>Tidak ada genre ditemukan.</p></div>';
+      return;
+    }
+    el.innerHTML = genres.map(g =>
+      `<a class="genre-btn" href="/genre/${encodeURIComponent(g)}">
+        <span>${g}</span>
+        <span class="arrow">›</span>
+      </a>`
+    ).join('');
+  }
+
+  function showBuilding(done, total) {
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    document.getElementById('genre-grid').innerHTML = `
+      <div class="loading-box">
+        <h3>⏳ Sedang Memuat Genre...</h3>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" style="width:${pct}%"></div>
+        </div>
+        <p style="font-weight:700;">${done} / ${total} game diproses (${pct}%)</p>
+        <p class="loading-note">Proses ini hanya terjadi sekali. Setelah selesai genre langsung tersedia.</p>
+      </div>`;
+  }
+
+  function poll() {
+    fetch('/api/genres/status')
+      .then(r => r.json())
+      .then(s => {
+        if (s.ready) {
+          clearInterval(pollTimer);
+          return fetch('/api/genres').then(r => r.json()).then(renderGenres);
+        }
+        showBuilding(s.done || 0, s.total || 0);
+      });
+  }
+
+  // Coba load genres
+  fetch('/api/genres')
+    .then(r => {
+      if (r.status === 202) {
+        return r.json().then(s => {
+          showBuilding(s.done || 0, s.total || 0);
+          pollTimer = setInterval(poll, 2000);
+        });
+      }
+      return r.json().then(renderGenres);
+    })
+    .catch(() => {
+      document.getElementById('genre-grid').innerHTML =
+        '<div class="empty" style="grid-column:span 2"><h3>Error</h3><p>Gagal memuat genre.</p></div>';
+    });
+</script>
+{% endblock %}

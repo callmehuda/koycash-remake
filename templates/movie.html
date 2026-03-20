@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block title %}Detail Game — KoyCash{% endblock %}
+
+{% block head %}
+<style>
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'Archivo Black', sans-serif; font-size: 12px;
+    text-transform: uppercase; letter-spacing: .5px;
+    text-decoration: none; color: var(--black);
+    border: var(--border); padding: 7px 12px;
+    box-shadow: var(--shadow-sm); margin-bottom: 16px;
+    background: var(--yellow); transition: transform .1s, box-shadow .1s;
+  }
+  .back-btn:hover { transform: translate(-2px,-2px); box-shadow: 7px 7px 0 var(--black); }
+
+  /* Layout atas: poster + info */
+  .movie-layout { display: flex; gap: 14px; align-items: flex-start; }
+  .movie-poster { flex: 0 0 120px; border: var(--border); box-shadow: var(--shadow); overflow: hidden; }
+  .movie-poster img { width: 120px; height: 213px; object-fit: cover; display: block; }
+  .movie-info { flex: 1; min-width: 0; }
+
+  .movie-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 18px; text-transform: uppercase;
+    letter-spacing: -1px; line-height: 1.15; margin-bottom: 10px;
+    word-break: break-word;
+  }
+
+  .meta-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+  .meta-chip {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border: 2px solid var(--black); text-transform: uppercase; letter-spacing: .3px;
+  }
+  .meta-chip.genre { background: var(--yellow); }
+  .meta-chip.size  { background: #c5e8f7; }
+  .meta-chip.views { background: #f7c5c5; }
+
+  .divider { border: none; border-top: var(--border); margin: 16px 0; }
+
+  /* Synopsis */
+  .block-label {
+    font-family: 'Archivo Black', sans-serif; font-size: 12px;
+    text-transform: uppercase; letter-spacing: .5px;
+    margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+  }
+  .block-label::after { content:''; flex:1; height:2px; background:var(--black); }
+  .synopsis { font-size: 13px; line-height: 1.8; color: #333; }
+
+  /* Download section */
+  .download-box {
+    border: var(--border); box-shadow: var(--shadow); overflow: hidden; margin-top: 20px;
+  }
+  .download-box-header {
+    background: var(--black); color: var(--yellow);
+    font-family: 'Archivo Black', sans-serif; font-size: 13px;
+    text-transform: uppercase; letter-spacing: .5px; padding: 10px 14px;
+  }
+  .download-box-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+
+  .btn-dl {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; text-align: center;
+    font-family: 'Archivo Black', sans-serif; font-size: 14px;
+    text-transform: uppercase; letter-spacing: .5px;
+    padding: 13px; border: var(--border); box-shadow: var(--shadow);
+    text-decoration: none; cursor: pointer;
+    background: var(--yellow); color: var(--black);
+    transition: transform .1s, box-shadow .1s;
+  }
+  .btn-dl:hover { transform: translate(-3px,-3px); box-shadow: 8px 8px 0 var(--black); }
+  .btn-dl.joiplay { background: #c8f7c5; }
+  .btn-dl.cheat   { background: #ffd6d6; }
+
+  .dl-note { font-size: 11px; color: #777; font-weight: 600; text-align: center; }
+
+  /* Screenshots */
+  .ss-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .ss-grid img {
+    width: 100%; aspect-ratio: 9/16; object-fit: cover;
+    border: var(--border); box-shadow: var(--shadow-sm); cursor: zoom-in;
+  }
+
+  /* Lightbox */
+  .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 999; align-items: center; justify-content: center; }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 90vw; max-height: 85vh; border: var(--border); }
+  .lightbox-close {
+    position: absolute; top: 16px; right: 16px;
+    background: var(--yellow); border: var(--border);
+    font-family: 'Archivo Black', sans-serif; font-size: 13px;
+    padding: 6px 12px; cursor: pointer; text-transform: uppercase;
+  }
+
+  /* Genre links */
+  .genre-link {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border: 2px solid var(--black);
+    text-transform: uppercase; background: var(--yellow);
+    text-decoration: none; color: var(--black);
+    box-shadow: 2px 2px 0 var(--black);
+    transition: transform .1s, box-shadow .1s;
+  }
+  .genre-link:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--black); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:20px;">
+  <a href="/" class="back-btn">← Kembali</a>
+  <div id="detail-container">
+    <div class="movie-layout">
+      <div class="skeleton" style="width:120px;height:213px;flex:0 0 120px;"></div>
+      <div style="flex:1">
+        <div class="skeleton" style="height:20px;width:85%;margin-bottom:12px;"></div>
+        <div class="skeleton" style="height:14px;width:55%;margin-bottom:8px;"></div>
+        <div class="skeleton" style="height:14px;width:40%;"></div>
+      </div>
+    </div>
+    <div class="skeleton" style="height:14px;margin:20px 0 8px;"></div>
+    <div class="skeleton" style="height:14px;width:90%;margin-bottom:6px;"></div>
+    <div class="skeleton" style="height:14px;width:75%;"></div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕ Tutup</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const filmId = "{{ film_id }}";
+  function thumb(t) {
+    if (!t) return '';
+    if (t.startsWith('http')) return t;
+    if (t.startsWith('assets/')) return 'https://koyzone.xyz/' + t;
+    return 'https://koyzone.xyz/assets/img/' + t;
+  }
+  function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').classList.add('open'); }
+  function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+
+  async function load() {
+    const [movieRes, gameRes] = await Promise.all([
+      fetch(`/api/movie/${filmId}`).then(r => r.json()).catch(() => null),
+      fetch(`/api/game/${filmId}`).then(r => r.json()).catch(() => null),
+    ]);
+
+    const el = document.getElementById('detail-container');
+    if (!movieRes || !movieRes.film) {
+      el.innerHTML = '<div class="empty"><h3>404</h3><p>Game tidak ditemukan.</p></div>';
+      return;
+    }
+
+    const f = movieRes.film;
+    // game.php bisa return {film:{...}} atau langsung {...}
+    const g = (gameRes && gameRes.film) ? gameRes.film : (gameRes || {});
+
+    document.title = `${f.judul || f.title} — KoyCash`;
+
+    // Genres
+    const genres = f.genre
+      ? f.genre.split(',').map(x => x.trim()).filter(Boolean)
+          .map(g => `<a class="genre-link" href="/">${g}</a>`).join(' ')
+      : '';
+
+    // Meta chips
+    const size = f.ukuran || g.ukuran || '';
+    const views = f.view ? parseInt(f.view).toLocaleString('id-ID') : '';
+
+    // Screenshots
+    const shots = [g.foto1, g.foto2, g.foto3].filter(Boolean);
+    const ssHtml = shots.length ? `
+      <hr class="divider">
+      <p class="block-label">Screenshots</p>
+      <div class="ss-grid">
+        ${shots.map(s => `<img src="${thumb(s)}" onerror="imgFallback(this)" loading="lazy" onclick="openLightbox('${thumb(s)}')">`).join('')}
+      </div>` : '';
+
+    // Download URL: coba dari film dulu, fallback dari game root
+    const dlUrl = f.download_url || g.download_url || g.link_download || '';
+    const joiplayUrl = g.link_joiplay || '';
+    const cheatUrl = f.cheat_url || '';
+
+    const dlHtml = dlUrl ? `
+      <div class="download-box">
+        <div class="download-box-header">⬇ Download Game</div>
+        <div class="download-box-body">
+          <a class="btn-dl" href="${dlUrl}" target="_blank" rel="noopener">
+            ⬇ Download APK${size ? ' · ' + size : ''}
+          </a>
+          ${joiplayUrl ? `<a class="btn-dl joiplay" href="${joiplayUrl}" target="_blank" rel="noopener">▶ Via JoiPlay</a>` : ''}
+          ${cheatUrl ? `<a class="btn-dl cheat" href="${cheatUrl}" target="_blank" rel="noopener">💡 Cheat / Walkthrough</a>` : ''}
+          <p class="dl-note">Link menuju sumber eksternal. KoyCash tidak menyimpan file.</p>
+        </div>
+      </div>` : `
+      <div class="download-box">
+        <div class="download-box-header">⬇ Download</div>
+        <div class="download-box-body">
+          <p class="dl-note" style="font-size:13px;color:#333;">Link download belum tersedia untuk game ini.</p>
+        </div>
+      </div>`;
+
+    const synopsis = f.synopsis || f.sinopsis || '';
+
+    el.innerHTML = `
+      <div class="movie-layout">
+        <div class="movie-poster">
+          <img src="${thumb(f.thumbnail)}" alt="${f.judul||f.title||''}" onerror="imgFallback(this)">
+        </div>
+        <div class="movie-info">
+          <h1 class="movie-title">${f.judul || f.title || ''}</h1>
+          <div class="meta-row">
+            ${size ? `<span class="meta-chip size">📦 ${size}</span>` : ''}
+            ${views ? `<span class="meta-chip views">👁 ${views}</span>` : ''}
+          </div>
+          <div class="meta-row">${genres}</div>
+        </div>
+      </div>
+      <hr class="divider">
+      ${synopsis ? `<p class="block-label">Deskripsi</p><p class="synopsis">${synopsis}</p>` : ''}
+      ${dlHtml}
+      ${ssHtml}
+    `;
+  }
+
+  load();
+</script>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ genre_name }} — KoyCash{% endblock %}
+
+{% block head %}
+<style>
+  .genre-hero { background: var(--black); color: var(--yellow); padding: 20px 16px 16px; border-bottom: var(--border); margin-bottom: 20px; }
+  .genre-hero h1 { font-family: 'Archivo Black', sans-serif; font-size: 32px; text-transform: uppercase; letter-spacing: -1.5px; line-height: 1; }
+  .genre-hero p { font-size: 12px; margin-top: 6px; color: #aaa; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'Archivo Black', sans-serif; font-size: 12px;
+    text-transform: uppercase; letter-spacing: .5px;
+    text-decoration: none; color: var(--black);
+    border: var(--border); padding: 7px 12px;
+    box-shadow: var(--shadow-sm); margin-bottom: 16px;
+    background: var(--yellow); transition: transform .1s, box-shadow .1s;
+  }
+  .back-btn:hover { transform: translate(-2px,-2px); box-shadow: 7px 7px 0 var(--black); }
+  .game-count { font-size: 13px; font-weight: 700; text-transform: uppercase; color: #777; margin-bottom: 12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="genre-hero">
+  <h1>{{ genre_name }}</h1>
+  <p>Game dengan genre ini</p>
+</div>
+
+<div class="container">
+  <a href="/genre" class="back-btn">← Semua Genre</a>
+  <div class="game-count" id="game-count"></div>
+  <div class="game-grid" id="games-container">
+    <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+    <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+    <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+    <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+    <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+    <div class="skeleton-card"><div class="skeleton skeleton-img"></div></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function thumb(t) {
+    if (!t) return '';
+    if (t.startsWith('http')) return t;
+    if (t.startsWith('assets/')) return 'https://koyzone.xyz/' + t;
+    return 'https://koyzone.xyz/assets/img/' + t;
+  }
+
+  function gameCard(f) {
+    const title = f.judul || f.title || '';
+    const genre = f.genre ? f.genre.split(',')[0].trim() : '';
+    return `<a class="game-card" href="/game/${f.id}">
+      <img src="${thumb(f.thumbnail)}" alt="${title}" onerror="imgFallback(this)" loading="lazy">
+      <div class="game-card-info">
+        <p>${title}</p>
+        ${genre ? `<span class="card-badge">${genre}</span>` : ''}
+      </div>
+    </a>`;
+  }
+
+  const genreName = {{ genre_name | tojson }};
+
+  fetch(`/api/genre/${encodeURIComponent(genreName)}`)
+    .then(r => r.json())
+    .then(data => {
+      const el = document.getElementById('games-container');
+      if (!data || !data.length) {
+        el.innerHTML = '<div class="empty" style="grid-column:span 3"><h3>Kosong</h3><p>Tidak ada game di genre ini.</p></div>';
+        return;
+      }
+      document.getElementById('game-count').textContent = `${data.length} game ditemukan`;
+      el.innerHTML = data.map(gameCard).join('');
+    })
+    .catch(() => {
+      document.getElementById('games-container').innerHTML =
+        '<div class="empty" style="grid-column:span 3"><h3>Error</h3><p>Gagal memuat game.</p></div>';
+    });
+</script>
+{% endblock %}
