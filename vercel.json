@@ -6,7 +6,23 @@
       "use": "@vercel/python"
     }
   ],
+  "rewrites": [
+    {
+      "source": "/proxy-img/:path*",
+      "destination": "https://koyzone.xyz/assets/:path*"
+    }
+  ],
   "routes": [
+    {
+      "src": "/static/(.*)",
+      "headers": { "cache-control": "public, max-age=31536000, immutable" },
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/proxy-img/(.*)",
+      "headers": { "cache-control": "public, max-weight=31536000, immutable" },
+      "dest": "/proxy-img/$1"
+    },
     {
       "src": "/(.*)",
       "dest": "app.py"
