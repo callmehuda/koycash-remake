@@ -84,16 +84,20 @@
 
 {% block scripts %}
 <script>
-  function thumb(t) {
-    if (!t) return '';
-    if (t.startsWith('assets/')) {
-      return '/' + t.replace('assets/', 'proxy-img/');
+    function thumb(t) {
+      if (!t) return '';
+      if (t.startsWith('http')) {
+        // Full URL, ambil bagian setelah /assets/
+        if (t.includes('koyzone.xyz/assets/')) {
+          return '/proxy-img/' + t.split('koyzone.xyz/assets/')[1];
+        }
+        return t; // URL luar, biarkan langsung
+      }
+      if (t.startsWith('assets/')) {
+        return '/proxy-img/' + t.slice('assets/'.length); // "assets/img/abc.jpg" → "/proxy-img/img/abc.jpg"
+      }
+      return '/proxy-img/img/' + t; // "abc.jpg" → "/proxy-img/img/abc.jpg"
     }
-    if (t.includes('koyzone.xyz/assets/')) {
-      return t.replace('https://koyzone.xyz/assets/', '/proxy-img/');
-    }
-    return t;
-  }
 
 
   function gameCard(f) {
