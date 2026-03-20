@@ -132,16 +132,12 @@
 {% block scripts %}
 <script>
   const filmId = "{{ film_id }}";
-    function thumb(t) {
-      if (!t) return '';
-      let originalUrl = '';
-      if (t.startsWith('http')) originalUrl = t;
-      else if (t.startsWith('assets/')) originalUrl = 'https://koyzone.xyz/' + t;
-      else originalUrl = 'https://koyzone.xyz/assets/img/' + t;
-    
-      return `https://wsrv.nl/?url=${encodeURIComponent(originalUrl)}&w=300&output=webp`;
-    }
-
+  function thumb(t) {
+    if (!t) return '';
+    if (t.startsWith('http')) return t;
+    if (t.startsWith('assets/')) return 'https://koyzone.xyz/' + t;
+    return 'https://koyzone.xyz/assets/img/' + t;
+  }
   function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').classList.add('open'); }
   function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
 
