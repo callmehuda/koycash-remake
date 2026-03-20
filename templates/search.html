@@ -38,12 +38,21 @@
 {% block scripts %}
 <script>
   function thumb(t) { return t && t.startsWith('http') ? t : 'https://koyzone.xyz/' + t; }
-  function thumbSearch(t) {
-    if (!t) return '';
-    if (t.startsWith('http')) return t;
-    if (t.startsWith('assets/')) return 'https://koyzone.xyz/' + t;
-    return 'https://koyzone.xyz/assets/img/' + t;
+function thumbSearch(t) {
+  if (!t) return '';
+  let originalUrl = '';
+  
+  if (t.startsWith('http')) {
+    originalUrl = t;
+  } else if (t.startsWith('assets/')) {
+    originalUrl = 'https://koyzone.xyz/' + t;
+  } else {
+    originalUrl = 'https://koyzone.xyz/assets/img/' + t;
   }
+
+  return `https://wsrv.nl/?url=${encodeURIComponent(originalUrl)}&w=150&output=webp&il`;
+}
+
   const API = 'https://koyzone.xyz';
   const initQuery = "{{ query | e }}";
 
